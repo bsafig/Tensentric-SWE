@@ -6,11 +6,22 @@
 #include <deque>
 using namespace std;
 
+/**
+ * @brief Puck object representing an item to be processed.
+ * 
+ */
 class Puck {
     int id, xPose, yPose;
 
     public:
 
+    /**
+     * @brief Construct a new Puck object
+     * 
+     * @param id puck identifier
+     * @param x x-position on the coordinate grid
+     * @param y y-position on the coordinate grid
+     */
     Puck(int id, int x, int y) {
         this->id = id;
         this->xPose = x;
@@ -18,9 +29,7 @@ class Puck {
     }
 
     void Work() {
-        cout << "Performing work on puck number " << id << ".\n";
-        this_thread::sleep_for(100ms);
-        cout << "Work on puck " << id << " completed.\n";
+        this_thread::sleep_for(500ms);
     }
 
     void MoveTo(int x, int y) {
@@ -129,7 +138,7 @@ class Grid {
 
         queue.clear();
 
-        // Collect pucks in spot order (tail → head)
+        // Collect pucks in spot order
         for (auto& spot : spots) {
             if (!spot.isEmpty()) {
                 queue.push_back(spot.puck);
@@ -155,13 +164,26 @@ class Grid {
 
         while (!queue.empty()) {
             Puck* active = queue.back();
+            int id = active->getId();
             queue.pop_back();
 
-            // TODO: Use a thread to simulate asynchronous work
-            active->Work();
+            cout << "Performing work on puck number " << id << ".\n";
+            thread worker([active]() {
+                active->Work();
+            });
 
             shiftPucksForward();
             printState();
+
+            worker.join();
+            cout << "Work on puck " << id << " completed.\n" << endl;
+
+            cout << "Post-Work positions" << endl;
+            printState();
+
+            // cout << "Closing gaps after work on puck " << id << ".\n";
+            // closeGaps();
+            // printState();
         }
 
         cout << "=== END WORK ===\n" << endl;
@@ -169,6 +191,7 @@ class Grid {
 
 
     void shiftPucksForward() {
+        //TODO: wait until work finishes to re-add
         int size = spots.size() - 1;
         Puck* tmp = spots[size].puck;
 
@@ -189,6 +212,9 @@ class Grid {
 int main() {
     Grid grid;
 
+    // Seed random number generator
+    srand(static_cast<unsigned int>(std::time(0)));
+
     // Initial setup
     grid.generatePucks(rand() % 9 + 1);
     grid.assignClosestSpots();
@@ -201,6 +227,7 @@ int main() {
     grid.printState();
 
     // Process work queue
+    // grid.createWorkQueue();
     grid.processWorkQueue();
 
     return 0;
