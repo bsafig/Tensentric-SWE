@@ -113,6 +113,7 @@ void Grid::createWorkQueue() {
             queue.push_back(spot.puck);
         }
     }
+    cout << "Work queue created with " << queue.size() << " pucks.\n" << endl;
 }
 
 void Grid::processWorkQueue() {
@@ -134,9 +135,12 @@ void Grid::processWorkQueue() {
 
         worker.join();
         cout << "Work completed.\n\n";
-
         spots[0].puck = active;
+        printState();
+        
+        cout << "Moving Puck " << active->getId() << " to next available spot." << endl;
         closeGaps();
+        printState();
     }
 
     cout << "=== END WORK ===\n" << endl;
