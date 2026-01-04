@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(Tensentric_SWE
+project(Sim
     VERSION 1.0
     LANGUAGES CXX
 )
@@ -17,6 +17,10 @@ else()
 endif()
 
 # Build executable
-add_executable(tensentric_sim
+add_executable(sim
     sim.cpp
+    Grid.cpp
+    Puck.cpp
 )
+
+target_include_directories(sim PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
