@@ -156,11 +156,32 @@ class Grid {
         while (!queue.empty()) {
             Puck* active = queue.back();
             queue.pop_back();
+
+            // TODO: Use a thread to simulate asynchronous work
             active->Work();
 
+            shiftPucksForward();
             printState();
         }
+
         cout << "=== END WORK ===\n" << endl;
+    }
+
+
+    void shiftPucksForward() {
+        int size = spots.size() - 1;
+        Puck* tmp = spots[size].puck;
+
+        for (size_t i = size; i > 0; i--) {
+            spots[i].puck = spots[i - 1].puck;
+            if (spots[i].puck) {
+                spots[i].puck->MoveTo(
+                    spots[i].xPos,
+                    spots[i].yPos
+                );
+            }
+        }
+        spots[0].puck = tmp;
     }
 
 };
