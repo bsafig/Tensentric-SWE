@@ -6,22 +6,10 @@
 #include <deque>
 using namespace std;
 
-/**
- * @brief Puck object representing an item to be processed.
- * 
- */
 class Puck {
     int id, xPose, yPose;
 
     public:
-
-    /**
-     * @brief Construct a new Puck object
-     * 
-     * @param id puck identifier
-     * @param x x-position on the coordinate grid
-     * @param y y-position on the coordinate grid
-     */
     Puck(int id, int x, int y) {
         this->id = id;
         this->xPose = x;
@@ -136,27 +124,35 @@ class Grid {
     void closeGaps() {
         cout << "Closing Gaps Between Pucks:\n";
 
-        queue.clear();
-
-        // Collect pucks in spot order
-        for (auto& spot : spots) {
-            if (!spot.isEmpty()) {
-                queue.push_back(spot.puck);
-                spot.puck = nullptr;
+        for(int i = spots.size() - 1; i >= 0; i--) {
+            if(spots[i].isEmpty()) {
+                // Find closest puck before this spot
+                for(int j = i - 1; j >= 0; j--) {
+                    if(!spots[j].isEmpty()) {
+                        // Move puck forward
+                        spots[i].puck = spots[j].puck;
+                        spots[j].puck->MoveTo(
+                            spots[i].xPos,
+                            spots[i].yPos
+                        );
+                        spots[j].puck = nullptr;
+                        break;
+                    }
+                }
             }
         }
 
-        // Reassign from the BACK
-        int start = spots.size() - queue.size();
-        for (size_t i = 0; i < queue.size(); i++) {
-            spots[start + i].puck = queue[i];
-            queue[i]->MoveTo(
-                spots[start + i].xPos,
-                spots[start + i].yPos
-            );
-        }
-
         cout << "Gaps closed.\n\n";
+    }
+
+    void createWorkQueue() {
+        queue.clear();
+        for (auto& spot : spots) {
+            if (!spot.isEmpty()) {
+                queue.push_back(spot.puck);
+            }
+        }
+        cout << "Work Queue Created with " << queue.size() << " pucks.\n" << endl;
     }
 
     void processWorkQueue() {
@@ -168,7 +164,7 @@ class Grid {
             queue.pop_back();
 
             cout << "Performing work on puck number " << id << ".\n";
-            thread worker([active]() {
+            thread worker([this, active]() {
                 active->Work();
             });
 
@@ -177,13 +173,14 @@ class Grid {
 
             worker.join();
             cout << "Work on puck " << id << " completed.\n" << endl;
+            spots[0].puck = active;
 
             cout << "Post-Work positions" << endl;
             printState();
 
-            // cout << "Closing gaps after work on puck " << id << ".\n";
-            // closeGaps();
-            // printState();
+            closeGaps();
+            cout << "Aggregated list after work on puck " << id << ":" << endl;
+            printState();
         }
 
         cout << "=== END WORK ===\n" << endl;
@@ -191,10 +188,7 @@ class Grid {
 
 
     void shiftPucksForward() {
-        //TODO: wait until work finishes to re-add
         int size = spots.size() - 1;
-        Puck* tmp = spots[size].puck;
-
         for (size_t i = size; i > 0; i--) {
             spots[i].puck = spots[i - 1].puck;
             if (spots[i].puck) {
@@ -204,7 +198,7 @@ class Grid {
                 );
             }
         }
-        spots[0].puck = tmp;
+        spots[0].puck = nullptr;
     }
 
 };
@@ -227,7 +221,7 @@ int main() {
     grid.printState();
 
     // Process work queue
-    // grid.createWorkQueue();
+    grid.createWorkQueue();
     grid.processWorkQueue();
 
     return 0;
