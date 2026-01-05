@@ -135,6 +135,7 @@ void Grid::processWorkQueue() {
 
         worker.join();
         cout << "Work completed.\n\n";
+        active->MoveTo(180, 60); 
         spots[0].puck = active;
         printState();
         
